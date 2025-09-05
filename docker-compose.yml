@@ -1,0 +1,23 @@
+# docker-compose.yml
+version: "3.8"
+
+services:
+  webhook:
+    container_name: webhook
+    build: .
+    env_file: .env
+    volumes:
+      - ./:/app
+    network_mode: host        # <-- host networking
+    # ports: "5000:5000"      # <-- not needed (container binds to host ports directly)
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok
+    command: ["http", "5000", "--log", "stdout"]  # target is now the host itself
+    # ports:
+    #   - "4040:4040"
+    env_file: .env
+    depends_on:
+      - webhook
+    network_mode: host        # <-- host networking also for ngrok
