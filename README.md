@@ -1,7 +1,4 @@
-# Messenger Bot with py-facebook-webhook
-
-This project runs a Facebook Messenger bot using [py-facebook-webhook](https://github.com/yc0/py-facebook-webhook) inside Docker.  
-It uses **FastAPI/Flask-style webhook handling** and exposes it through **ngrok**.
+# Messenger Bot uses **FastAPI/Flask-style webhook handling** and exposes it through **ngrok**.
 
 <img src="./agent_subcription_fields.png" width="600" alt="agent subcription fields"/>
 
