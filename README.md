@@ -10,8 +10,8 @@
 
 ### 1. Clone this repo
 ```bash
-git clone https://github.com/yc0/py-facebook-webhook.git
-cd py-facebook-webhook
+git clone https://github.com/thanhhuynhk17/messenger_agent.git
+cd messenger_agent
 ```
 
 ### 2. Create `.env` file
