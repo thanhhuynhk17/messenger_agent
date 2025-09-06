@@ -54,4 +54,3 @@ VERIFY_TOKEN=your_verify_token PAGE_ACCESS_TOKEN=your_page_access_token python -
 
 ## 📚 References
 - [Facebook Messenger Platform Docs](https://developers.facebook.com/docs/messenger-platform/)
-- [yc0/py-facebook-webhook](https://github.com/yc0/py-facebook-webhook)
