@@ -4,6 +4,7 @@ import httpx                      # pip install httpx
 from fastapi import FastAPI, Request, Response
 from dotenv import load_dotenv
 from agent_client import LangGraphAgent
+import asyncio
 
 load_dotenv()
 
@@ -13,7 +14,7 @@ PAGE_ACCESS_TOKEN = os.getenv("PAGE_ACCESS_TOKEN")
 VERIFY_TOKEN      = os.getenv("VERIFY_TOKEN")      # must match FB dashboard
 
 DEFAULT_AGENT_URL   = os.getenv("AGENT_URL", "http://localhost:2024")
-DEFAULT_ASSISTANT_ID = os.getenv("ASSISTANT_ID", "react_planner")
+DEFAULT_ASSISTANT_ID = os.getenv("ASSISTANT_ID", "search_agent")
 agent_client = LangGraphAgent(
     agent_url=DEFAULT_AGENT_URL,
     assistant_id=DEFAULT_ASSISTANT_ID
@@ -63,6 +64,9 @@ def verify_webhook(request: Request):
 # --------------------------------------------------
 # Webhook events (POST)
 # --------------------------------------------------
+# set lưu mid đã xử lý
+PROCESSED_MIDS = set()
+
 @app.post("/webhook")
 async def handle_webhook(request: Request):
     data = await request.json()
@@ -71,32 +75,49 @@ async def handle_webhook(request: Request):
     if data.get("object") == "page":
         for entry in data.get("entry", []):
             for event in entry.get("messaging", []):
+
+                # ❌ bỏ qua delivery & read ngay từ đầu
+                print("Check: delivery or read")
+                if "delivery" in event or "read" in event:
+                    print("Skip: delivery or read")
+                    continue
+                print("Pass: delivery or read")
+
                 sender_id = event.get("sender", {}).get("id")
                 if not sender_id:
                     continue
 
+                # ✅ xử lý message
                 if "message" in event:
                     message = event["message"]
 
-                    # ignore echoes and non-text attachments
+                    # ignore echoes
                     if message.get("is_echo"):
                         continue
+
+                    mid = message.get("mid")
+                    if mid in PROCESSED_MIDS:
+                        print(f"⚠️ Bỏ qua duplicate mid: {mid}")
+                        continue
+                    PROCESSED_MIDS.add(mid)
 
                     if "text" in message:
                         user_msg = message["text"].strip()
                         print("Bạn vừa nói:", user_msg)
-                        # await send_message(sender_id, "Khách iu vui lòng đợi chút ạ.")
-                        
-                        # NEW: per-user thread_id
+                        await send_message(sender_id, "Khách iu vui lòng đợi chút ạ.")
+
                         if sender_id not in THREADS:
                             THREADS[sender_id] = None
 
-                        thread_id, ai_msg = await agent_client.chat(user_msg, THREADS[sender_id])
+                        thread_id, ai_msg = await agent_client.chat(
+                            user_msg, THREADS[sender_id]
+                        )
                         THREADS[sender_id] = thread_id
-                        # Example: echo it back
                         await send_message(sender_id, ai_msg.strip())
                     else:
-                        # user sent an image, sticker, etc.
-                        await send_message(sender_id, "Mình chưa hỗ trợ gửi hình hay audio, chỉ có thể chat bằng văn bản thôi.")
+                        await send_message(
+                            sender_id,
+                            "Mình chưa hỗ trợ gửi hình hay audio, chỉ có thể chat bằng văn bản thôi."
+                        )
 
     return Response(content="EVENT_RECEIVED", media_type="text/plain")

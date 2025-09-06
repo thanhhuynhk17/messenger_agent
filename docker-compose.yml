@@ -9,7 +9,8 @@ services:
     volumes:
       - ./:/app
     network_mode: host        # <-- host networking
-    # ports: "5000:5000"      # <-- not needed (container binds to host ports directly)
+    # ports: 
+    #   - "5000:5000"      # <-- not needed (container binds to host ports directly)
 
   ngrok:
     image: ngrok/ngrok:latest
@@ -18,6 +19,6 @@ services:
     # ports:
     #   - "4040:4040"
     env_file: .env
-    depends_on:
-      - webhook
     network_mode: host        # <-- host networking also for ngrok
+    # depends_on:
+    #   - webhook

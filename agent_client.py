@@ -3,7 +3,7 @@ import os
 from typing import Optional, Tuple
 from dotenv import load_dotenv
 from langgraph_sdk import get_client
-
+from utils.helper_msg import extract_final_answer
 load_dotenv()
 
 DEFAULT_AGENT_URL   = os.getenv("AGENT_URL", "http://localhost:2024")
@@ -23,12 +23,9 @@ class LangGraphAgent:
         self,
         agent_url: str = DEFAULT_AGENT_URL,
         assistant_id: str = DEFAULT_ASSISTANT_ID,
-        *,
-        webhook_url: Optional[str] = 'https://langgraph.free.beeceptor.com',
     ):
         self.client = get_client(url=agent_url)
         self.assistant_id = assistant_id
-        self.webhook_url = webhook_url
 
     # ------------------------------------------------------------------
     # public API
@@ -44,23 +41,29 @@ class LangGraphAgent:
         """
         thread_id = await self._get_or_create_thread(thread_id)
         ai_text = await self._run_agent(user_message, thread_id)
-        return thread_id, ai_text
+        
+        # format ai message
+        final_msg = extract_final_answer(ai_text)
+        
+        return thread_id, final_msg
 
     # ------------------------------------------------------------------
     # internal helpers
     # ------------------------------------------------------------------
     async def _get_or_create_thread(self, thread_id: Optional[str]) -> str:
-        thread = await self.client.threads.create(
-            thread_id=thread_id, if_exists="do_nothing"
-        )
-        return thread["thread_id"]
+        try:
+            thread = await self.client.threads.create(
+                thread_id=thread_id, if_exists="do_nothing"
+            )
+            return thread["thread_id"]
+        except Exception as e:
+            raise RuntimeError(f"Failed to create thread at thread_id {e}") from e
 
     async def _run_agent(self, user_message: str, thread_id: str) -> str:
         run_result = await self.client.runs.wait(
             thread_id,
             assistant_id=self.assistant_id,
             input={"messages": [{"role": "user", "content": user_message}]},
-            webhook=self.webhook_url,
         )
 
         # last AI message

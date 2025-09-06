@@ -21,8 +21,9 @@ cd py-facebook-webhook
 ```.env
 NGROK_AUTHTOKEN=
 PAGE_ACCESS_TOKEN=
-VERIFY_TOKEN=
-AGENT_URL=http://192.168.88.112:2024
+VERIFY_TOKEN=dummy_text
+
+AGENT_URL=http://host.docker.internal:2024
 ASSISTANT_ID=search_agent
 ```
 
