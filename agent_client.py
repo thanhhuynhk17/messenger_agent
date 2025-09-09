@@ -77,10 +77,14 @@ class LangGraphAgent:
 import asyncio
 
 async def main():
-    agent = LangGraphAgent()
-    tid, reply = await agent.chat("Plan a 3-day trip to Tokyo")
-    print("Thread:", tid)
-    print("AI   :", reply)
+    agent = LangGraphAgent(
+        agent_url="http://localhost:2024"
+    )
+    # get state
+    state = await agent.client.threads.get_history(
+        thread_id="61434bac-99c0-4377-9d58-9d840fa3a557"
+    )
+    print("state:\n", state)
 
 if __name__ == "__main__":
     asyncio.run(main())
